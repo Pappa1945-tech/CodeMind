@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeMind - Premium Coding AI Chatbot</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Highlight.js for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css?v=2.1.2">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="https://www.sbtech.co.in/" target="_blank" class="logo" style="text-decoration: none; color: inherit;">
+                    <img src="/static/favicon.png" alt="CodeMind Logo" width="72" height="72">
+                    <span>CodeMind</span>
+                </a>
+                <button class="mobile-close-btn" id="mobileCloseBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <button class="new-chat-btn" id="newChatBtn" data-tooltip="Start a new coding conversation thread" data-tooltip-position="right">
+                <i class="fa-solid fa-plus"></i> New Chat
+            </button>
+            
+            <div class="sessions-container">
+                <div class="section-title">
+                    <span>Recent Conversations</span>
+                    <button class="clear-all-btn" id="clearAllBtn" data-tooltip="Clear all chat history permanently" data-tooltip-position="right">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </div>
+                <ul class="sessions-list" id="sessionsList">
+                    <!-- Dynamic chat history list will render here -->
+                    <div class="empty-sessions">No recent chats</div>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-text">Checking LLM...</span>
+                </div>
+                <button class="settings-trigger" id="settingsTrigger" data-tooltip="Configure LLM service provider and routing options" data-tooltip-position="right">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>LLM Settings</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- MAIN CHAT CONTAINER -->
+        <main class="chat-container">
+            
+            <!-- CHAT HEADER -->
+            <header class="chat-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn" data-tooltip="Toggle sidebar navigation menu" data-tooltip-position="bottom">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="header-chat-title" id="headerChatTitle">New Chat</div>
+                
+                <!-- TOP MIDDLE MODEL NAME DISPLAY -->
+                <div class="header-model-display" id="headerModelDisplay">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span id="activeModelName">qwen2.5-coder:7b</span>
+                </div>
+                
+                <div class="header-controls">
+                    <!-- Deep Thinking Toggle -->
+                    <div class="toggle-control" data-tooltip="Show detailed reasoning process of the model" data-tooltip-position="bottom">
+                        <label class="switch-label" for="deepThinkingToggle">
+                            <i class="fa-solid fa-microchip"></i> Deep Thinking
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="deepThinkingToggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Agentic Mode Toggle -->
+                    <div class="toggle-control" data-tooltip="Allow the AI model to autonomously execute files, directories, and CLI tools" data-tooltip-position="bottom">
+                        <label class="switch-label" for="agenticModeToggle">
+                            <i class="fa-solid fa-robot"></i> Agentic Mode
+                        </label>
+                        <label class="switch agentic-switch">
+                            <input type="checkbox" id="agenticModeToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- WORKSPACE INDICATOR BAR -->
+            <div class="workspace-bar">
+                <div class="workspace-info">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span class="workspace-label">Workspace:</span>
+                    <span class="workspace-path" id="workspacePathDisplay">Loading...</span>
+                </div>
+                <button class="workspace-action-btn" id="loadWorkspaceBtn" data-tooltip="Configure and load a folder or file path into the AI context scope" data-tooltip-position="bottom">
+                    <i class="fa-solid fa-plus"></i> Load Folder/File
+                </button>
+            </div>
+            
+            <!-- CHAT MESSAGES PANEL -->
+            <div class="messages-panel" id="messagesPanel">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">
+                        <i class="fa-solid fa-code glow-text"></i>
+                    </div>
+                    <h1>Welcome to CodeMind</h1>
+                    <p>A professional coding AI assistant powered by Qwen2.5-Coder 7B. Ask questions, build components, debug, or write clean algorithms.</p>
+                    
+                    <!-- Dependency Status Widget -->
+                    <div class="dependency-status-widget" id="dependencyWidget" style="display: none;">
+                        <h4><i class="fa-solid fa-list-check"></i> System Dependency Check</h4>
+                        <div class="dependency-grid">
+                            <div class="dep-item" id="depNode">
+                                <span class="dep-name">Node.js</span>
+                                <span class="dep-val">Checking...</span>
+                            </div>
+                            <div class="dep-item" id="depNpm">
+                                <span class="dep-name">NPM</span>
+                                <span class="dep-val">Checking...</span>
+                            </div>
+                            <div class="dep-item" id="depOmni">
+                                <span class="dep-name">OmniRoute</span>
+                                <span class="dep-val">Checking...</span>
+                            </div>
+                            <div class="dep-item" id="depOllama">
+                                <span class="dep-name">Ollama</span>
+                                <span class="dep-val">Checking...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-prompts">
+                        <button class="quick-prompt-card" data-prompt="Write a Python script that scrapes headlines from a website and saves them to a CSV." data-tooltip="Load quick template for a Python Web Scraper" data-tooltip-position="top">
+                            <i class="fa-brands fa-python"></i>
+                            <span>Web Scraper Script</span>
+                        </button>
+                        <button class="quick-prompt-card" data-prompt="Create a glassmorphic sidebar CSS component with smooth hover animations." data-tooltip="Load quick template for a Glassmorphic CSS Component" data-tooltip-position="top">
+                            <i class="fa-brands fa-css3-alt"></i>
+                            <span>Glassmorphic CSS Layout</span>
+                        </button>
+                        <button class="quick-prompt-card" data-prompt="Explain recursion in JavaScript with a simple, visual code example." data-tooltip="Load quick template to explain recursion" data-tooltip-position="top">
+                            <i class="fa-brands fa-js"></i>
+                            <span>Explain recursion</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Dynamic messages go here -->
+            </div>
+            
+            <!-- CHAT INPUT AREA -->
+            <div class="chat-input-area">
+                <!-- File upload chips container -->
+                <div class="attachment-chips" id="attachmentChips"></div>
+                
+                <div class="input-wrapper">
+                    <!-- Hidden File Input -->
+                    <input type="file" id="fileInput" multiple style="display: none;">
+                    
+                    <!-- Paperclip file upload button -->
+                    <button class="input-action-btn" id="uploadFileBtn" data-tooltip="Upload local file(s) to attach to your prompt" data-tooltip-position="top">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    
+                    <!-- Paste Code (Pest) button -->
+                    <button class="input-action-btn" id="pasteCodeBtn" data-tooltip="Paste raw code with formatting options" data-tooltip-position="top">
+                        <i class="fa-solid fa-paste"></i>
+                    </button>
+                    
+                    <!-- Load Folder/File button -->
+                    <button class="input-action-btn" id="loadScopeBtn" data-tooltip="Load local workspace folder/file directly into scope" data-tooltip-position="top">
+                        <i class="fa-solid fa-circle-plus" style="color: var(--accent-indigo);"></i>
+                    </button>
+                    
+                    <!-- Main text input box -->
+                    <textarea class="chat-textarea" id="chatInput" placeholder="Ask CodeMind to write, debug, or explain code..." rows="1" data-tooltip="Type your coding request here (Enter to send, Shift+Enter for newline)" data-tooltip-position="top"></textarea>
+                    
+                    <!-- Speech-to-Text Button -->
+                    <button class="input-action-btn mic-btn" id="sttBtn" data-tooltip="Dictate prompt using speech-to-text" data-tooltip-position="top">
+                        <i class="fa-solid fa-microphone"></i>
+                        <span class="stt-active-pulse"></span>
+                    </button>
+                    
+                    <!-- Send Button -->
+                    <button class="send-btn" id="sendBtn" disabled data-tooltip="Send message to CodeMind" data-tooltip-position="top">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- Active speech to text visualization overlay -->
+                <div class="stt-visualizer" id="sttVisualizer">
+                    <div class="stt-visualizer-content">
+                        <div class="wave-container">
+                            <span class="bar"></span>
+                            <span class="bar"></span>
+                            <span class="bar"></span>
+                            <span class="bar"></span>
+                            <span class="bar"></span>
+                        </div>
+                        <p class="stt-listening-text">Listening... Speak now</p>
+                        <button class="stt-cancel-btn" id="sttCancelBtn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- PASTE CODE (PEST) MODAL -->
+    <div class="modal-overlay" id="pasteModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-code"></i> Paste & Format Code</h3>
+                <button class="modal-close" id="closePasteModalBtn" data-tooltip="Close paste dialog" data-tooltip-position="left"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-group">
+                    <label for="pasteLangSelect">Source Language</label>
+                    <select id="pasteLangSelect" data-tooltip="Select language for syntax highlighting in prompt" data-tooltip-position="top">
+                        <option value="auto">Auto Detect</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                        <option value="rust">Rust</option>
+                        <option value="go">Go</option>
+                        <option value="sql">SQL</option>
+                        <option value="bash">Bash / Shell</option>
+                    </select>
+                </div>
+                <div class="modal-form-group flex-fill">
+                    <label for="pasteTextarea">Code Content</label>
+                    <textarea id="pasteTextarea" placeholder="Paste your raw code here..." class="modal-textarea" data-tooltip="Type or paste your raw source code here" data-tooltip-position="top"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary-btn" id="beautifyCodeBtn" data-tooltip="Clean up and indent code automatically" data-tooltip-position="top">
+                    <i class="fa-solid fa-sparkles"></i> Auto Format
+                </button>
+                <div class="right-buttons">
+                    <button class="outline-btn" id="cancelPasteBtn" data-tooltip="Cancel and close paste dialog" data-tooltip-position="top">Cancel</button>
+                    <button class="primary-btn" id="insertPasteBtn" data-tooltip="Insert formatted code snippet into chatbox" data-tooltip-position="top">Insert Formatted Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-card max-width-md">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-sliders"></i> LLM Configuration</h3>
+                <button class="modal-close" id="closeSettingsModalBtn" data-tooltip="Close settings dialog" data-tooltip-position="left"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-group" style="display: none;">
+                    <label for="providerSelect">LLM Provider</label>
+                    <select id="providerSelect" data-tooltip="Choose the backend provider API" data-tooltip-position="top">
+                        <option value="omniroute">OmniRoute</option>
+                    </select>
+                </div>
+                
+                <div class="modal-form-group" id="baseUrlGroup" style="display: none;">
+                    <label for="settingsBaseUrl">Base URL</label>
+                    <input type="text" id="settingsBaseUrl" data-tooltip="Endpoint URL for the LLM connection" data-tooltip-position="top">
+                </div>
+                
+                <div class="modal-form-group" id="apiKeyGroup" style="display: none;">
+                    <label for="settingsApiKey">API Key</label>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="settingsApiKey" data-tooltip="API authentication token for selected provider" data-tooltip-position="top">
+                        <button class="toggle-password-btn" id="toggleApiKeyVisibility" type="button" data-tooltip="Toggle API Key visibility" data-tooltip-position="top">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-form-group" id="omnirouteModelGroup">
+                    <label for="omnirouteModelSelect">LLM Selection</label>
+                    <select id="omnirouteModelSelect" data-tooltip="Select active LLM routing mode" data-tooltip-position="top">
+                        <option value="codemind-decide">Let CodeMind decide</option>
+                        <option value="omniroute">OmniRoute</option>
+                        <option value="qwen2.5-coder:7b">qwen2.5-coder:7b</option>
+                    </select>
+                    <small class="form-help">Select the LLM routing option.</small>
+                    <button type="button" class="outline-btn btn-sm" id="editOmnirouteCredentialsBtn" style="margin-top: 10px; display: none;">
+                        <i class="fa-solid fa-key"></i> Edit Credentials...
+                    </button>
+                </div>
+                
+                <div class="modal-form-group" id="modelGroup" style="display: none;">
+                    <label for="settingsModel">Model Name</label>
+                    <input type="text" id="settingsModel" data-tooltip="Target model identifier tag name" data-tooltip-position="top">
+                </div>
+                
+                <div class="connection-test-result" id="connectionTestResult" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="outline-btn" id="testConnectionBtn" data-tooltip="Send verification request to configured provider" data-tooltip-position="top">
+                    <i class="fa-solid fa-wifi"></i> Test Connection
+                </button>
+                <div class="right-buttons">
+                    <button class="outline-btn" id="cancelSettingsBtn" data-tooltip="Discard configuration changes and close" data-tooltip-position="top">Close</button>
+                    <button class="primary-btn" id="saveSettingsBtn" data-tooltip="Apply and save current configuration" data-tooltip-position="top">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OMNIROUTE CUSTOM CREDENTIALS MODAL -->
+    <div class="modal-overlay" id="omnirouteCustomModal">
+        <div class="modal-card max-width-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key"></i> OmniRoute Custom Credentials</h3>
+                <button class="modal-close" id="closeOmnirouteCustomModalBtn" data-tooltip="Close modal dialog" data-tooltip-position="left"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-group">
+                    <label for="omnirouteCustomEndpoint">Endpoint Base URL</label>
+                    <input type="text" id="omnirouteCustomEndpoint" placeholder="http://localhost:20128/v1" data-tooltip="Custom gateway connection URL address" data-tooltip-position="top">
+                    <small class="form-help">Your custom OmniRoute gateway API URL.</small>
+                </div>
+                <div class="modal-form-group">
+                    <label for="omnirouteCustomApiKey">API Key</label>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="omnirouteCustomApiKey" placeholder="sk-..." data-tooltip="API authorization key for target gateway" data-tooltip-position="top">
+                        <button class="toggle-password-btn" id="toggleOmnirouteCustomApiKeyVisibility" type="button" data-tooltip="Toggle API Key visibility" data-tooltip-position="top">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <small class="form-help">Your custom API key for this endpoint.</small>
+                </div>
+                <div class="connection-test-result" id="omnirouteCustomTestResult" style="display: none; margin-top: 15px;"></div>
+            </div>
+            <div class="modal-footer flex-end">
+                <div class="right-buttons">
+                    <button class="outline-btn" id="cancelOmnirouteCustomBtn" data-tooltip="Discard changes and return" data-tooltip-position="top">Cancel</button>
+                    <button class="primary-btn" id="saveOmnirouteCustomBtn" data-tooltip="Apply credentials to current session settings" data-tooltip-position="top">Apply Credentials</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- LOAD SCOPE MODAL -->
+    <div class="modal-overlay" id="loadScopeModal">
+        <div class="modal-card max-width-md">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-folder-open"></i> Load Folder / File into Scope</h3>
+                <button class="modal-close" id="closeLoadScopeModalBtn" data-tooltip="Close scope loading dialog" data-tooltip-position="left"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="tab-btn active" id="tabFolderBtn" data-tooltip="Switch tab to load a local folder directory" data-tooltip-position="top">Load Local Folder</button>
+                <button class="tab-btn" id="tabFileBtn" data-tooltip="Switch tab to load a single file attachment" data-tooltip-position="top">Load Local File</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Folder tab content -->
+                <div class="tab-content" id="tabContentFolder">
+                    <div class="modal-form-group">
+                        <label for="folderPathInput">Folder Absolute Path</label>
+                        <div class="input-browse-wrapper">
+                            <input type="text" id="folderPathInput" placeholder="E:\My Creation\PYTHON\Projects\AI\coding\test" data-tooltip="Input absolute directory path of the folder to load" data-tooltip-position="top">
+                            <button class="outline-btn browse-btn" id="browseFolderBtn" data-tooltip="Open file explorer to browse folders" data-tooltip-position="top">
+                                <i class="fa-regular fa-folder-open"></i> Browse...
+                            </button>
+                        </div>
+                        <small class="form-help">Loads the directory into the active agent workspace. All file actions and execution commands will run relative to this path.</small>
+                    </div>
+                </div>
+                
+                <!-- File tab content -->
+                <div class="tab-content" id="tabContentFile" style="display: none;">
+                    <div class="modal-form-group">
+                        <label for="filePathInput">File Absolute Path</label>
+                        <div class="input-browse-wrapper">
+                            <input type="text" id="filePathInput" placeholder="E:\My Creation\PYTHON\Projects\AI\coding\test\app.py" data-tooltip="Input absolute path of the file to load" data-tooltip-position="top">
+                            <button class="outline-btn browse-btn" id="browseFileBtn" data-tooltip="Open file explorer to browse files" data-tooltip-position="top">
+                                <i class="fa-regular fa-file"></i> Browse...
+                            </button>
+                        </div>
+                        <small class="form-help">Loads the contents of a local file into the scope of the current chat session. The file will be added as an attachment.</small>
+                    </div>
+                </div>
+                
+                <div class="load-test-result" id="loadTestResult" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="right-buttons">
+                    <button class="outline-btn" id="cancelLoadScopeBtn" data-tooltip="Cancel and close scope dialog" data-tooltip-position="top">Cancel</button>
+                    <button class="primary-btn" id="confirmLoadScopeBtn" data-tooltip="Load specified path into AI workspace context" data-tooltip-position="top">Load into Scope</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Marked.js (Markdown parsing) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <!-- Highlight.js (Code highlighting) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+    <!-- Custom Application JS -->
+    <script src="/static/app.js?v=2.2.3"></script>
+</body>
+</html>
