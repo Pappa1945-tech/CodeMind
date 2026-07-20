@@ -73,6 +73,32 @@ When **Agentic Mode** is toggled ON, CodeMind executes an advanced, self-correct
 
 ---
 
+## 🚀 Handling Large & Complicated Projects
+
+CodeMind is engineered from the ground up to design, build, and maintain large-scale, complex applications. Unlike traditional one-off chatbots, it implements a set of advanced agentic behaviors to manage multi-file architectures:
+
+### 1. The Plan-First Locking Workflow
+To ensure architectural consistency and prevent runaway operations, CodeMind uses a strict **Planning Mode**:
+* **Deconstruction & Analysis**: CodeMind scans your entire workspace directory to understand the database schema, folder layout, and existing dependencies.
+* **Locked Implementation Plan**: Before writing any code or executing commands, it writes a detailed `implementation_plan.md` outlining the proposed module structure, file list, and verification commands. It locks execution until you explicitly review the plan and approve it (by typing `approve` or `build`).
+
+### 2. Multi-File Workspace Editing
+Equipped with dedicated file management tools, CodeMind operates directly on your physical workspace:
+* **Workspace Read & Write**: It reads across multiple files to understand dependencies, and writes new code components (`write_file`).
+* **Surgical Code Patching**: Instead of rewriting entire files (which wastes tokens and risks errors), it uses high-precision patching (`patch_file`) to modify specific sections of existing files.
+
+### 3. Terminal Execution & Self-Healing Loop
+When writing code for large projects, compile/runtime errors can occur. CodeMind handles these autonomously:
+* **Automated Building & Testing**: It executes compiler, linting, or testing commands (like `npm run build`, `pytest`, or `cargo test`) via the workspace shell (`run_command`).
+* **Recursive Error Resolution**: If a command fails, CodeMind captures the stdout/stderr stack trace, analyzes the failure, patches the offending files, and runs the command again. It repeats this self-healing loop until the project builds successfully and all tests pass.
+
+### 4. Continuous Context Memory Across Fallbacks
+When a rate limit or gateway connection failure occurs on a high-tier model, CodeMind ensures zero progress loss:
+* **SQLite Session Persistence**: Every prompt, system log, tool execution, and compiler output is stored in `codemind.db`.
+* **Context-Preserved Transition**: If CodeMind falls back to another model (e.g. from Claude to Qwen), it seamlessly passes the exact same running session log, allowing the fallback model to pick up the task from the exact line where the previous model left off.
+
+---
+
 ## 🛠️ Advanced Engineering & Core Modules
 
 ### 1. Unified LLM Client (`llm_client.py`)
